@@ -365,8 +365,9 @@ func (s *serviceProxy) processAuthentication(ctx context.Context, req *http.Requ
 	// try managed cluster authentication first
 	managedClusterResp, managedClusterAuthenticated, err := s.managedClusterAuthenticator.AuthenticateToken(ctx, token)
 	if err != nil {
-		logger.Error(err, "managed cluster authentication failed")
-		return fmt.Errorf("managed cluster authentication failed: %v", err)
+		// Treat managed cluster TokenReview errors as "not authenticated" rather than fatal.
+		logger.V(4).Info("managed cluster authentication failed, trying hub", "error", err)
+		managedClusterAuthenticated = false
 	}
 
 	if managedClusterAuthenticated {
